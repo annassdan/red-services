@@ -1,0 +1,17 @@
+{
+  "name": "red-express",
+  "version": "1.0.0",
+  "description": "Backend handler for RED App",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "annassdan",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "performance-now": "^2.1.0"
+  }
+}
