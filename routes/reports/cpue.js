@@ -1,12 +1,13 @@
 const express = require('express');
-const {RSCRIPT_PATH, CPUE} = require("../../helpers/constants");
+const {CPUE} = require("../../helpers/constants");
 const {
     generateGraphicImageName,
     loggingRequestBody,
     concatenateRscriptArguments,
     executeCommandLine,
     responseStatus,
-    resolveRscriptCommand
+    resolveRscriptCommand,
+    rscript
 } = require("../../helpers/utilities");
 const router = express.Router();
 
@@ -24,7 +25,7 @@ router.post('/', async (req, res) => {
         {prop: 'end', str: true} // end date
     ]);
 
-    const command = `rscript ${__project_root}\\${RSCRIPT_PATH}\\${CPUE}.R ${graphicImageName} ${restArgs}`;
+    const command = `rscript ${rscript(CPUE)} ${graphicImageName} ${restArgs}`;
     const {stderr} = await executeCommandLine(resolveRscriptCommand(command));
     //
     if (stderr) {

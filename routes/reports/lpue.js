@@ -6,7 +6,8 @@ const {
     concatenateRscriptArguments,
     executeCommandLine,
     responseStatus,
-    resolveRscriptCommand
+    resolveRscriptCommand,
+    rscript
 } = require("../../helpers/utilities");
 const router = express.Router();
 
@@ -24,7 +25,7 @@ router.post('/', async (req, res) => {
         {prop: 'end', str: true} // end date
     ]);
 
-    const command = `rscript ${__project_root}\\${RSCRIPT_PATH}\\${LPUE}.R ${graphicImageName} ${restArgs}`;
+    const command = `rscript ${rscript(LPUE)} ${graphicImageName} ${restArgs}`;
     const {stderr} = await executeCommandLine(resolveRscriptCommand(command));
 
     if (stderr) {

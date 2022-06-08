@@ -1,12 +1,13 @@
 const express = require('express');
-const {RSCRIPT_PATH, HUBUNGAN_PANJANG_BERAT} = require("../../helpers/constants");
+const {HUBUNGAN_PANJANG_BERAT} = require("../../helpers/constants");
 const {
     generateGraphicImageName,
     loggingRequestBody,
     concatenateRscriptArguments,
     executeCommandLine,
     responseStatus,
-    resolveRscriptCommand
+    resolveRscriptCommand,
+    rscript
 } = require("../../helpers/utilities");
 const router = express.Router();
 
@@ -36,7 +37,7 @@ router.post('/', async (req, res) => {
     //     {prop: 'species', arr: true},
     // ]);
 
-    const command = `rscript ${__project_root}\\${RSCRIPT_PATH}\\${HUBUNGAN_PANJANG_BERAT}.R ${graphicImageName} ${restArgs}`;
+    const command = `rscript ${rscript(HUBUNGAN_PANJANG_BERAT)} ${graphicImageName} ${restArgs}`;
     const {stderr} = await executeCommandLine(resolveRscriptCommand(command));
     //
     if (stderr) {

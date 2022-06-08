@@ -2,6 +2,7 @@ const performanceNow = require("performance-now");
 const util = require("util");
 const {exec} = require("child_process");
 const execPromise = util.promisify(exec);
+const {RSCRIPT_PATH} = require("./constants");
 
 /**
  * Execute string command to terminal command or command prompt
@@ -74,6 +75,11 @@ function responseStatus(bin) {
     return bin === 1 ? 'SUCCESS' : 'ERROR';
 }
 
+/**
+ * Wrap with double quote to handle string that contain whitespace
+ * @param value
+ * @returns {string}
+ */
 function asStringArg(value) {
     return `"${value}"`;
 }
@@ -91,6 +97,20 @@ function resolveRscriptCommand(command) {
     }
 }
 
+/**
+ * Resolve R Script source as string that used to terminal
+ * @param reportFileName
+ */
+function rscript(reportFileName) {
+    let rscriptPath = `${__project_root}\\${RSCRIPT_PATH}\\${reportFileName}.R`;
+    if (rscriptPath.includes(' ')) {
+        return resolveRscriptCommand(rscriptPath);
+    }
+
+    return resolveRscriptCommand(rscriptPath);
+}
+
+
 
 module.exports = {
     executeCommandLine,
@@ -98,5 +118,6 @@ module.exports = {
     concatenateRscriptArguments,
     loggingRequestBody,
     responseStatus,
-    resolveRscriptCommand
+    resolveRscriptCommand,
+    rscript
 };
