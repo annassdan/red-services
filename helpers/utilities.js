@@ -104,7 +104,7 @@ function resolveRscriptCommand(command) {
 function rscript(reportFileName) {
     let rscriptPath = `${__project_root}\\${RSCRIPT_PATH}\\${reportFileName}.R`;
     if (rscriptPath.includes(' ')) {
-        return resolveRscriptCommand(rscriptPath);
+        return resolveRscriptCommand(asStringArg(rscriptPath));
     }
 
     return resolveRscriptCommand(rscriptPath);
