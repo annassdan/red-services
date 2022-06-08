@@ -1,76 +1,60 @@
+const createError = require('http-errors');
 const express = require('express');
 const app = express();
-const port = 4000;
-const { exec } = require("child_process");
-const util  = require("util");
-const execPromise = util.promisify(exec);
+const bodyParser = require('body-parser');
 const cors = require('cors');
-const performanceNow = require("performance-now");
+const {APP_PORT, PUBLIC_PATH} = require('./helpers/constants');
+const hubunganPanjangBerat = require('./routes/reports/hubungan-panjang-berat');
+const cpue = require('./routes/reports/cpue');
+const lpue = require('./routes/reports/lpue');
+const hasilTangkapanPerTrip = require('./routes/reports/hasil-tangkapan-per-trip');
+const produksiIkanPerAlatTangkap = require('./routes/reports/produksi-ikan-per-alat-tangkap');
+const produksiIkanPerSumberDaya = require('./routes/reports/produksi-ikan-per-sumber-daya');
+const strukturUkuranIkanTertangkap = require('./routes/reports/struktur-ukuran-ikan-tertangkap');
 
-const rscriptPath = 'r-scripts';
-const publicPath = 'r-scripts/images';
+global.__project_root = __dirname;
+global.__image_extention = '.jpg';
 
-// allow cors
+/**
+ * Setup requirement for internal process on express
+ */
 app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
 
-// serve static folder that available publicly
-app.use('/static', express.static(publicPath));
+// Define URLs
+app.use('/static/', express.static(PUBLIC_PATH));
+app.use('/generate-hubungan-panjang-berat', hubunganPanjangBerat);
+app.use('/generate-cpue', cpue);
+app.use('/generate-lpue', lpue);
+app.use('/generate-hasil-tangkapan-per-trip', hasilTangkapanPerTrip);
+app.use('/generate-produksi-ikan-per-alat-tangkap', produksiIkanPerAlatTangkap);
+app.use('/generate-produksi-ikan-per-sumber-daya', produksiIkanPerSumberDaya);
+app.use('/generate-struktur-ukuran-ikan-tertangkap', strukturUkuranIkanTertangkap);
 
+/**
+ * Catch 404 and forward to error handler
+ */
+app.use(function (req, res, next) {
+    next(createError(404));
+});
 
+/**
+ * Application root of BRPL RED
+ */
 app.get('/', (req, res) => {
-    res.status(200).send({
-        applicationName: 'RED!'
+    res.status(200).json({
+        applicationName: 'BRPL RED'
     });
 });
 
-app.delete('/delete-image/:imageName', async (req, res) => {
-    try {
-        // do som file deletion here
-        res.status(200).send({
-            status: 'SUCCESS'
-        });
-    } catch (e) {
-        res.status(500).send({
-            status: 'ERROR'
-        });
-    }
-});
-
-app.post('/execute-graphic/:graphicName', async (req, res) => {
-    const graphicName = req.params['graphicName'];
-    console.log(graphicName);
-    console.log(req.body);
-    try {
-        await execPromise(`rscript ${rscriptPath}/panjang_x_berat.R ${concatenateGraphicParam(graphicName, req.body)}`);
-        res.status(200).send({
-            status: 'SUCCESS'
-        });
-    } catch (e) {
-        res.status(500).send({
-            status: 'ERROR'
-        });
-    }
-});
-
-
-function generateGraphicImageName(graphicName) {
-    let loadTimeInMS = Date.now();
-    const times = (loadTimeInMS + performanceNow()) * 1000;
-    return `${graphicName}_${times}_${Math.random()}`;
-}
-
 /**
- * Concatenate request params as string, used for R Script file arguments
- * @param graphicName
- * @param params
+ * Start the application
  */
-function concatenateGraphicParam(graphicName, params) {
-    return `${generateGraphicImageName(graphicName)} ${params.selectedWpp} `
-}
-
 app.listen({
-    port,
+    port: APP_PORT,
     cors: '*'
 }, () => {
-    console.log(`Example app listening on port ${port}`);
+    console.log(`BRPL RED Handler app listening on port ${APP_PORT}`);
+    // console.log(`BRPL RED Handler app listening on port 4000`);
 });
