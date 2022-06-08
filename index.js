@@ -24,13 +24,13 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 // Define URLs
 app.use('/static/', express.static(PUBLIC_PATH));
-app.use('/generate-hubungan-panjang-berat', hubunganPanjangBerat);
-app.use('/generate-cpue', cpue);
-app.use('/generate-lpue', lpue);
-app.use('/generate-hasil-tangkapan-per-trip', hasilTangkapanPerTrip);
-app.use('/generate-produksi-ikan-per-alat-tangkap', produksiIkanPerAlatTangkap);
-app.use('/generate-produksi-ikan-per-sumber-daya', produksiIkanPerSumberDaya);
-app.use('/generate-struktur-ukuran-ikan-tertangkap', strukturUkuranIkanTertangkap);
+app.use('/hubungan-panjang-berat', hubunganPanjangBerat);
+app.use('/cpue', cpue);
+app.use('/lpue', lpue);
+app.use('/hasil-tangkapan-per-trip', hasilTangkapanPerTrip);
+app.use('/produksi-ikan-per-alat-tangkap', produksiIkanPerAlatTangkap);
+app.use('/produksi-ikan-per-sumber-daya', produksiIkanPerSumberDaya);
+app.use('/struktur-ukuran-ikan-tertangkap', strukturUkuranIkanTertangkap);
 
 /**
  * Catch 404 and forward to error handler

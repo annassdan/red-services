@@ -5,4 +5,8 @@ const pool = new Pool({
     database: 'e_brpl_2',
     password: 'talasbogor',
     port: 5432,
-})
+});
+
+module.exports = {
+  pool
+};
