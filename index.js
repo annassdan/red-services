@@ -3,7 +3,9 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const {APP_PORT, PUBLIC_PATH} = require('./helpers/constants');
+const {APP_PORT, PUBLIC_PATH, CPUE, HUBUNGAN_PANJANG_BERAT, HASIL_TANGKAPAN_PER_TRIP, PRODUKSI_IKAN_PER_ALAT_TANGKAP,
+    PRODUKSI_IKAN_PER_SUMBER_DAYA, STRUKTUR_UKURAN_IKAN_TERTANGKAP, LPUE
+} = require('./helpers/constants');
 const hubunganPanjangBerat = require('./routes/reports/hubungan-panjang-berat');
 const cpue = require('./routes/reports/cpue');
 const lpue = require('./routes/reports/lpue');
@@ -24,13 +26,13 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 // Define URLs
 app.use('/static/', express.static(PUBLIC_PATH));
-app.use('/hubungan-panjang-berat', hubunganPanjangBerat);
-app.use('/cpue', cpue);
-app.use('/lpue', lpue);
-app.use('/hasil-tangkapan-per-trip', hasilTangkapanPerTrip);
-app.use('/produksi-ikan-per-alat-tangkap', produksiIkanPerAlatTangkap);
-app.use('/produksi-ikan-per-sumber-daya', produksiIkanPerSumberDaya);
-app.use('/struktur-ukuran-ikan-tertangkap', strukturUkuranIkanTertangkap);
+app.use(`/${HUBUNGAN_PANJANG_BERAT}`, hubunganPanjangBerat);
+app.use(`/${CPUE}`, cpue);
+app.use(`/${LPUE}`, lpue);
+app.use(`/${HASIL_TANGKAPAN_PER_TRIP}`, hasilTangkapanPerTrip);
+app.use(`/${PRODUKSI_IKAN_PER_ALAT_TANGKAP}`, produksiIkanPerAlatTangkap);
+app.use(`/${PRODUKSI_IKAN_PER_SUMBER_DAYA}`, produksiIkanPerSumberDaya);
+app.use(`/${STRUKTUR_UKURAN_IKAN_TERTANGKAP}`, strukturUkuranIkanTertangkap);
 
 /**
  * Catch 404 and forward to error handler
