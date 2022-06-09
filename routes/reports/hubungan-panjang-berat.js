@@ -7,7 +7,8 @@ const {
     executeCommandLine,
     responseStatus,
     resolveRscriptCommand,
-    rscript
+    rscript,
+    normalizeEscapeString
 } = require("../../helpers/utilities");
 const {pool} = require("../../database/database");
 const router = express.Router();
@@ -78,7 +79,7 @@ router.post('/locations', (req, res, next) => {
     const {start, end, wpp} = req.body;
     pool.query(`with source as (select trim(nama_lokasi_sampling) as nama_lokasi_sampling
                 from brpl_biologireproduksi
-                where tanggal_sampling between '${start}' and '${end}' and trim(wpp) = trim('${wpp}'))
+                where tanggal_sampling between '${start}' and '${end}' and trim(wpp) = trim('${normalizeEscapeString(wpp)}'))
                 select nama_lokasi_sampling as value, nama_lokasi_sampling as label
                 from source
                 group by nama_lokasi_sampling
@@ -94,12 +95,13 @@ router.post('/locations', (req, res, next) => {
 });
 
 
+
 router.post('/species', (req, res, next) => {
     const {start, end, wpp, location} = req.body;
     pool.query(`with source as (select trim(uuid_spesies) as spesies
                     from brpl_biologireproduksi
                     where tanggal_sampling between '${start}' and '${end}'
-                    and trim(wpp) = trim('${wpp}') and trim(nama_lokasi_sampling) = trim('${location}'))
+                    and trim(wpp) = trim('${normalizeEscapeString(wpp)}') and trim(nama_lokasi_sampling) = trim('${normalizeEscapeString(location)}'))
                     select spesies as value, spesies as label
                     from source
                     group by spesies

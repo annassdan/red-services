@@ -3,7 +3,8 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const {APP_PORT, PUBLIC_PATH, CPUE, HUBUNGAN_PANJANG_BERAT, HASIL_TANGKAPAN_PER_TRIP, PRODUKSI_IKAN_PER_ALAT_TANGKAP,
+const {
+    APP_PORT, PUBLIC_PATH, CPUE, HUBUNGAN_PANJANG_BERAT, HASIL_TANGKAPAN_PER_TRIP, PRODUKSI_IKAN_PER_ALAT_TANGKAP,
     PRODUKSI_IKAN_PER_SUMBER_DAYA, STRUKTUR_UKURAN_IKAN_TERTANGKAP, LPUE
 } = require('./helpers/constants');
 const hubunganPanjangBerat = require('./routes/reports/hubungan-panjang-berat');
@@ -24,6 +25,15 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
+/**
+ * Application root of BRPL RED
+ */
+app.get('/', (req, res) => {
+    res.status(200).json({
+        applicationName: 'BRPL RED'
+    });
+});
+
 // Define URLs
 app.use('/static/', express.static(PUBLIC_PATH));
 app.use(`/${HUBUNGAN_PANJANG_BERAT}`, hubunganPanjangBerat);
@@ -39,15 +49,6 @@ app.use(`/${STRUKTUR_UKURAN_IKAN_TERTANGKAP}`, strukturUkuranIkanTertangkap);
  */
 app.use(function (req, res, next) {
     next(createError(404));
-});
-
-/**
- * Application root of BRPL RED
- */
-app.get('/', (req, res) => {
-    res.status(200).json({
-        applicationName: 'BRPL RED'
-    });
 });
 
 /**

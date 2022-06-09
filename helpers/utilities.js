@@ -110,6 +110,10 @@ function rscript(reportFileName) {
     return resolveRscriptCommand(rscriptPath);
 }
 
+function normalizeEscapeString(str) {
+    return str.replace(/'/g, `''`);
+}
+
 
 
 module.exports = {
@@ -119,5 +123,6 @@ module.exports = {
     loggingRequestBody,
     responseStatus,
     resolveRscriptCommand,
-    rscript
+    rscript,
+    normalizeEscapeString
 };
