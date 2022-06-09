@@ -62,7 +62,7 @@ router.post('/wpp', (req, res, next) => {
     });
 });
 
-router.post('/location', (req, res, next) => {
+router.post('/locations', (req, res, next) => {
     const {start, end, wpp} = req.body;
     pool.query(`with landing as (select nama_lokasi_pendaratan as nama_lokasi_pendaratan
                 from brpl_pendaratan
