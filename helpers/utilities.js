@@ -81,7 +81,7 @@ function responseStatus(bin) {
  * @returns {string}
  */
 function asStringArg(value) {
-    return `"${value}"`;
+    return `"${normalizeEscapeString(value)}"`;
 }
 
 /**
