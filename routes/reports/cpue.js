@@ -7,13 +7,13 @@ const {
     executeCommandLine,
     responseStatus,
     resolveRscriptCommand,
-    rscript
+    rscript, normalizeEscapeString
 } = require("../../helpers/utilities");
 const {pool} = require("../../database/database");
 const router = express.Router();
 
 /**
- * Route to generate report result for Hubungan Panjang Berat Graphic
+ * Route to generate report result for CPUE Graphic
  */
 router.post('/', async (req, res) => {
     const graphicImageName = generateGraphicImageName(CPUE);
@@ -43,6 +43,10 @@ router.post('/', async (req, res) => {
     });
 });
 
+
+/**
+ * Datasource for predefined data wpp on selected date range for CPUE  Graphic
+ */
 router.post('/wpp', (req, res, next) => {
     const {start, end} = req.body;
     pool.query(`with landing as (select trim(wpp) as wpp
@@ -62,11 +66,15 @@ router.post('/wpp', (req, res, next) => {
     });
 });
 
+
+/**
+ * Datasource for predefined data locations on selected date range for CPUE Graphic
+ */
 router.post('/locations', (req, res, next) => {
     const {start, end, wpp} = req.body;
-    pool.query(`with landing as (select nama_lokasi_pendaratan as nama_lokasi_pendaratan
+    pool.query(`with landing as (select trim(nama_lokasi_pendaratan) as nama_lokasi_pendaratan
                 from brpl_pendaratan
-                where tanggal_pendaratan between '${start}' and '${end}' and wpp = '${wpp}')
+                where tanggal_pendaratan between '${start}' and '${end}' and trim(wpp) = trim('${normalizeEscapeString(wpp)}'))
                 select nama_lokasi_pendaratan as value, nama_lokasi_pendaratan as label
                 from landing
                 group by nama_lokasi_pendaratan
