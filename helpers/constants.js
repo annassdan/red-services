@@ -5,6 +5,8 @@ const HASIL_TANGKAPAN_PER_TRIP = 'hasil_tangkapan_per_trip';
 const PRODUKSI_IKAN_PER_ALAT_TANGKAP = 'produksi_ikan_per_alat_tangkap';
 const PRODUKSI_IKAN_PER_SUMBER_DAYA = 'produksi_ikan_per_sumber_daya';
 const STRUKTUR_UKURAN_IKAN_TERTANGKAP = 'struktur_ukuran_ikan_tertangkap';
+const ALL_WPP = 'Seluruh WPP';
+const ALL_RESOURCE = 'Seluruh Sumber Daya';
 
 const RSCRIPT_PATH = 'r-scripts';
 const PUBLIC_PATH = 'r-scripts\\images';
@@ -20,5 +22,7 @@ module.exports = {
     STRUKTUR_UKURAN_IKAN_TERTANGKAP,
     RSCRIPT_PATH,
     PUBLIC_PATH,
-    APP_PORT
+    APP_PORT,
+    ALL_RESOURCE,
+    ALL_WPP
 }

@@ -1,5 +1,5 @@
 const express = require('express');
-const {RSCRIPT_PATH, LPUE} = require("../../helpers/constants");
+const {RSCRIPT_PATH, LPUE, ALL_WPP} = require("../../helpers/constants");
 const {
     generateGraphicImageName,
     loggingRequestBody,
@@ -50,20 +50,25 @@ router.post('/', async (req, res) => {
  */
 router.post('/wpp', (req, res, next) => {
     const {start, end} = req.body;
-    pool.query(`with landing as (select trim(wpp) as wpp
-                from brpl_pendaratan
-                where tanggal_pendaratan between '${start}' and '${end}')
-                select wpp as value, wpp as label
-                from landing
-                group by wpp
-                order by wpp`, (error, {rows}) => {
+    const query = `with landing as (select trim(wpp) as wpp
+                   from brpl_pendaratan
+                   where tanggal_pendaratan between '${start}' and '${end}')
+                   select wpp as value, wpp as label
+                   from landing
+                   group by wpp
+                   order by wpp`;
 
+    pool.query(query, (error, {rows}) => {
         if (error) {
             res.status(500).json('Gagal');
             return;
         }
 
-        res.status(200).json(rows || []);
+        const responseBody = rows.length > 0 ? [
+            {value: ALL_WPP, label: ALL_WPP},
+            ...rows
+        ] : [];
+        res.status(200).json(responseBody);
     });
 });
 
@@ -73,14 +78,17 @@ router.post('/wpp', (req, res, next) => {
  */
 router.post('/locations', (req, res, next) => {
     const {start, end, wpp} = req.body;
-    pool.query(`with landing as (select trim(nama_lokasi_pendaratan) as nama_lokasi_pendaratan
-                from brpl_pendaratan
-                where tanggal_pendaratan between '${start}' and '${end}' and trim(wpp) = trim('${normalizeEscapeString(wpp)}'))
-                select nama_lokasi_pendaratan as value, nama_lokasi_pendaratan as label
-                from landing
-                group by nama_lokasi_pendaratan
-                order by nama_lokasi_pendaratan`, (error, {rows}) => {
+    // and ('${normalizeEscapeString(resource)}' = '${ALL_RESOURCE}' or trim(uuid_sumber_daya) = trim('${normalizeEscapeString(resource)}'))
+    const query = `with landing as (select trim(nama_lokasi_pendaratan) as nama_lokasi_pendaratan
+                   from brpl_pendaratan
+                   where (tanggal_pendaratan between '${start}' and '${end}') 
+                   and ('${normalizeEscapeString(wpp)}' = '${ALL_WPP}' or trim(wpp) = trim('${normalizeEscapeString(wpp)}')) )
+                   select nama_lokasi_pendaratan as value, nama_lokasi_pendaratan as label
+                   from landing
+                   group by nama_lokasi_pendaratan
+                   order by nama_lokasi_pendaratan`;
 
+    pool.query(query, (error, {rows}) => {
         if (error) {
             res.status(500).json('Gagal');
             return;

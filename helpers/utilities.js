@@ -11,7 +11,7 @@ const {RSCRIPT_PATH} = require("./constants");
  * @returns {Promise<{stdout: undefined, stderr}|{stdout: (*|string), stderr: (*|undefined)}>}
  */
 function executeCommandLine(command, args = undefined) {
-    console.log(command);
+    // console.log(command);
     return execPromise(command)
         .then(() => {
             return {
@@ -43,9 +43,10 @@ function generateGraphicImageName(graphicName) {
  * @param body
  */
 function concatenateRscriptArguments(body, params) {
-    return params.reduce((accumulator, currentValue, currentIndex, arr) => {
+    return params.reduce((accumulator, currentValue) => {
+        console.log('currentValue', currentValue, body[currentValue['prop']]);
         if (typeof currentValue === 'string') {
-            return `${accumulator} ${body[currentValue]}`;
+            return `${accumulator} ${asStringArg(body[currentValue['prop']])}`;
         } else if ((typeof currentValue === 'object')) {
             const arr = currentValue['arr'];
             if (arr) {
@@ -81,7 +82,7 @@ function responseStatus(bin) {
  * @returns {string}
  */
 function asStringArg(value) {
-    return `"${normalizeEscapeString(value)}"`;
+    return `"${normalizeEscapeString(value === undefined ? undefined : String(value).trim())}"`;
 }
 
 /**
@@ -111,7 +112,7 @@ function rscript(reportFileName) {
 }
 
 function normalizeEscapeString(str) {
-    return str.replace(/'/g, `''`);
+    return String(str).replace(/'/g, `''`);
 }
 
 
