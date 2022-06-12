@@ -22,9 +22,8 @@ library(scales)
 library(viridis)
 
 options(echo = TRUE)
-# setwd("C:/R/BRPL/")
 
-#remoce all object
+#remove all object
 rm(list=ls())
 
 param = commandArgs(trailingOnly=TRUE)
@@ -40,21 +39,21 @@ con <- DBI::dbConnect(
 )
 on.exit(dbDisconnect(drv))
 
-fileName <- param[1]
-samplingDateQuery <- param[2]
-wppQuery <- param[3]
-resourceQuery <- param[4]
-locationQuery <- param[5]
-speciesQuery <- param[6]
-lengthQuery <- param[7]
-weightQuery <- param[8]
+file_name <- param[1]
+sampling_date_query <- param[2]
+wpp_query <- param[3]
+resource_query <- param[4]
+location_query <- param[5]
+species_query <- param[6]
+length_query <- param[7]
+weight_query <- param[8]
 
 # Building query selector
-sqQuery <- paste("SELECT panjang, berat FROM brpl_biologireproduksidetail INNER JOIN brpl_biologireproduksi on brpl_biologireproduksi.uuid = brpl_biologireproduksidetail.uuid_biologireproduksi WHERE ",
- samplingDateQuery, wppQuery, resourceQuery, locationQuery, speciesQuery, lengthQuery, weightQuery)
+sql_query <- paste("SELECT panjang, berat FROM brpl_biologireproduksidetail INNER JOIN brpl_biologireproduksi on brpl_biologireproduksi.uuid = brpl_biologireproduksidetail.uuid_biologireproduksi WHERE ",
+ sampling_date_query, wpp_query, resource_query, location_query, species_query, length_query, weight_query)
 
 # Execute query to database
-q_panjangberat <- dbSendQuery(con, sqQuery)
+q_panjangberat <- dbSendQuery(con, sql_query)
 
 panjangberat <- dbFetch(q_panjangberat, n=-1)
 colnames(panjangberat) <- c("Panjang","Berat (gram)")
@@ -70,7 +69,7 @@ fig_panjangberat <-
 reg1 <- lm(panjangberat$`Berat (gram)`~ panjangberat$Panjang, data = panjangberat)
 r2 <- summary(reg1)$adj.r.squared
 
-jpeg(paste0("r-scripts/images/", fileName,'.jpg'))
+jpeg(paste0("r-scripts/images/", file_name,'.jpg'))
 fig_panjangberat
 dev.off()
 
