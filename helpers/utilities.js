@@ -14,7 +14,7 @@ function executeCommandLine(command, args = undefined) {
     // console.log(command);
     return execPromise(command)
         .then(({stdout}) => {
-            console.log(stdout);
+            // console.log(stdout);
             return {
                 stdout,
                 stderr: undefined
@@ -46,14 +46,29 @@ function generateGraphicImageName(graphicName) {
  */
 function concatenateRscriptArguments(body, params) {
     return params.reduce((accumulator, currentValue) => {
-        if (typeof currentValue === 'string') {
-            return `${accumulator} ${asStringArg(body[currentValue['prop']])}`;
-        } else if ((typeof currentValue === 'object')) {
-            const arr = currentValue['arr'];
-            if (arr) {
-                const loop = body[currentValue['prop']];
-                const adder = loop.reduce((str, current) => (typeof current === 'string' ? `${str} ${asStringArg(current)}` : `${str} ${current}`), '');
+        const defaultObject = { sqlColumn: undefined, first: false, ...currentValue };
+        const {prop, props, str, arr, between, sqlColumn, first} = defaultObject;
+
+        if (arr) {
+            const list = body[prop];
+            if (sqlColumn) {
+                const sql = concatenateAsSqlOr(sqlColumn, list, true, false);
+                return `${accumulator} ${asStringArg(sql)}`;
+            } else {
+                const adder = list.reduce((str, current) => (typeof current === 'string' ? `${str} ${asStringArg(current)}` : `${str} ${current}`), '');
                 return `${accumulator}${adder}`;
+            }
+        }
+
+        if (between && sqlColumn) {
+            const sql = concatenateAsSqlBetween(sqlColumn, body[props[0]], body[props[1]], !first);
+            return `${accumulator} ${asStringArg(sql)}`;
+        }
+
+        if (str) {
+            if (sqlColumn) {
+                const sql = concatenateAsSqlOr(sqlColumn, body[prop]);
+                return `${accumulator} ${asStringArg(sql)}`;
             } else {
                 return `${accumulator} ${asStringArg(body[currentValue['prop']])}`;
             }
@@ -106,7 +121,7 @@ function resolveRscriptCommand(command) {
 function rscript(reportFileName) {
     let rscriptPath = `${__project_root}\\${RSCRIPT_PATH}\\${reportFileName}.R`;
     if (rscriptPath.includes(' ')) {
-        return resolveRscriptCommand(asStringArg(rscriptPath));
+        return resolveRscriptCommand(`"${rscriptPath}"`);
     }
 
     return resolveRscriptCommand(rscriptPath);
@@ -117,8 +132,12 @@ function rscript(reportFileName) {
  * @param str
  * @returns {string}
  */
-function normalizeEscapeString(str) {
+function normalizeEscapeGlobalString(str) {
     return String(str).replace(/'/g, `''`);
+}
+
+function normalizeEscapeString(str) {
+    return String(str).replace(/^'/, `''`);
 }
 
 /**
@@ -134,17 +153,23 @@ function delay(ms) {
  * concatenate string array as sql or statement
  * @param columnTarget
  * @param list
- * @param and
+ * @param andPrefix
+ * @param escapeGlobal
  * @returns {string|*}
  */
-function concatenateAsSqlOr(columnTarget, list = [], and = true) {
+function concatenateAsSqlOr(columnTarget, list = [], andPrefix = true, escapeGlobal = true) {
     if (list === null || list.length === 0 || list.length === 1 && list[0] === API_FOR_ALL_SELECTED) {
         return '';
     }
 
     return  list.reduce((accumulator, currentValue, currentIndex) => {
-        return `${accumulator} trim(${columnTarget}) = trim('${normalizeEscapeString(currentValue)}') ${currentIndex < list.length - 1 ? 'or' : ')'}`
-    }, and ? ' and (' : ' (');
+        if (typeof currentValue === 'number') {
+            return `${accumulator} ${columnTarget} = ${normalizeEscapeString(currentValue)} ${currentIndex < list.length - 1 ? 'or' : ')'}`;
+        } else {
+            const value = escapeGlobal ? normalizeEscapeGlobalString(currentValue) : normalizeEscapeString(currentValue);
+            return `${accumulator} trim(${columnTarget}) = trim('${value}') ${currentIndex < list.length - 1 ? 'or' : ')'}`;
+        }
+    }, andPrefix ? 'and (' : ' (');
 }
 
 /**
@@ -152,10 +177,31 @@ function concatenateAsSqlOr(columnTarget, list = [], and = true) {
  * @param columnTarget
  * @param start
  * @param end
- * @param and
+ * @param andPrefix
  */
-function concatenateAsSqlBetween(columnTarget, start, end, and = false) {
-    return `${and ? 'and (' : ' ('} ${columnTarget} between '${start}' and '${end}')`;
+function concatenateAsSqlBetween(columnTarget, start, end, andPrefix = false) {
+    if (typeof start === 'number' && typeof end === 'number') {
+        return `${andPrefix ? 'and (' : ' ('} ${columnTarget} between ${start} and ${end})`;
+    } else {
+        return `${andPrefix ? 'and (' : ' ('} ${columnTarget} between '${start}' and '${end}')`;
+    }
+}
+
+/**
+ *
+ * @param columnTarget
+ * @param value
+ * @param andPrefix
+ * @param escapeGlobal
+ * @returns {string}
+ */
+function concatenateAsSql(columnTarget, value, andPrefix = false, escapeGlobal = true) {
+    if (typeof value === 'number') {
+        return `${andPrefix ? 'and (' : ' ('} ${columnTarget} = ${value})`;
+    } else {
+        const c = escapeGlobal ? normalizeEscapeGlobalString(value) : normalizeEscapeString(value);
+        return `${andPrefix ? 'and (' : ' ('} trim('${columnTarget}') = trim('${c}'))`;
+    }
 }
 
 

@@ -8,7 +8,7 @@ const {
     responseStatus,
     resolveRscriptCommand,
     rscript,
-    normalizeEscapeString, concatenateAsSqlOr, concatenateAsSqlBetween
+    concatenateAsSqlOr, concatenateAsSqlBetween
 } = require("../../helpers/utilities");
 const {pool} = require("../../database/database");
 const router = express.Router();
@@ -20,28 +20,18 @@ router.post('/', async (req, res) => {
     const graphicImageName = generateGraphicImageName(HUBUNGAN_PANJANG_BERAT);
     loggingRequestBody(req.body);
 
-    // const restArgs = concatenateRscriptArguments(req.body, [
-    //     'wpp',
-    //     'year',
-    //     {prop: 'location', str: true},
-    //     {prop: 'species', arr: true}
-    // ]);
     const restArgs = concatenateRscriptArguments(req.body, [
-        // 'wpp',
-        {prop: 'wpp', str: true},
-        {prop: 'location', str: true},
-        {prop: 'start', str: true}, // start date
-        {prop: 'end', str: true}, // end date
-        {prop: 'resource', str: true},
-        {prop: 'minLength', str: true},
-        {prop: 'maxLength', str: true},
-        {prop: 'minWeight', str: true},
-        {prop: 'maxWeight', str: true},
-        {prop: 'species', arr: true},
+        // { prop = undefined, props = [], str = false, arr = false, between = false, sqlColumn = '', first: false},
+        {props: ['start', 'end'], between: true, sqlColumn: 'tanggal_sampling', first: true},
+        {prop: 'wpp', arr: true, sqlColumn: 'wpp'},
+        {prop: 'resource', arr: true, sqlColumn: 'uuid_sumber_daya'},
+        {prop: 'location', arr: true, sqlColumn: 'nama_lokasi_sampling'},
+        {prop: 'species', arr: true, sqlColumn: 'uuid_spesies'},
+        {props: ['minLength', 'maxLength'], between: true, sqlColumn: 'panjang'},
+        {props: ['minWeight', 'maxWeight'], between: true, sqlColumn: 'berat'},
     ]);
 
     const command = `rscript ${rscript('hubungan_panjang_berat_original')} ${graphicImageName} ${restArgs}`;
-    console.log(command);
     const {stderr} = await executeCommandLine(resolveRscriptCommand(command));
     //
     if (stderr) {
@@ -80,7 +70,7 @@ router.post('/wpp', (req, res, next) => {
 
         const responseBody = rows && rows.length > 0 ? [
             {
-                label: ALL_WPP,
+                label: `${ALL_WPP}&nbsp;&nbsp;(${rows.length})`,
                 options: rows
             }
         ] : (rows || []);
@@ -112,7 +102,7 @@ router.post('/resources', (req, res, next) => {
 
         const responseBody = rows && rows.length > 0 ? [
             {
-                label: ALL_RESOURCE,
+                label: `${ALL_RESOURCE}&nbsp;&nbsp;(${rows.length})`,
                 options: rows
             }
         ] : (rows || []);
@@ -144,7 +134,7 @@ router.post('/locations', (req, res, next) => {
 
         const responseBody = rows && rows.length > 0 ? [
             {
-                label: ALL_LOCATION,
+                label: `${ALL_LOCATION}&nbsp;&nbsp;(${rows.length})`,
                 options: rows
             }
         ] : (rows || []);
@@ -178,7 +168,7 @@ router.post('/species', (req, res, next) => {
 
         res.status(200).json(rows.length > 0 ? [
             {
-                label: ALL_SPECIES,
+                label: `${ALL_SPECIES}&nbsp;&nbsp;(${rows.length})`,
                 options: rows
             }
         ] : (rows || []));
