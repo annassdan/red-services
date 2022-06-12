@@ -2,7 +2,7 @@ const performanceNow = require("performance-now");
 const util = require("util");
 const {exec} = require("child_process");
 const execPromise = util.promisify(exec);
-const {RSCRIPT_PATH} = require("./constants");
+const {RSCRIPT_PATH, API_FOR_ALL_SELECTED} = require("./constants");
 
 /**
  * Execute string command to terminal command or command prompt
@@ -13,16 +13,18 @@ const {RSCRIPT_PATH} = require("./constants");
 function executeCommandLine(command, args = undefined) {
     // console.log(command);
     return execPromise(command)
-        .then(() => {
+        .then(({stdout}) => {
+            console.log(stdout);
             return {
-                stdout: `Eksekusi ${args || ''} Berhasil.`,
+                stdout,
                 stderr: undefined
             }
         })
-        .catch((e) => {
+        .catch(({stdout, stderr, cmd}) => {
             return {
-                stdout: undefined,
-                stderr: e
+                stdout,
+                stderr,
+                cmd
             }
         });
 }
@@ -44,7 +46,6 @@ function generateGraphicImageName(graphicName) {
  */
 function concatenateRscriptArguments(body, params) {
     return params.reduce((accumulator, currentValue) => {
-        console.log('currentValue', currentValue, body[currentValue['prop']]);
         if (typeof currentValue === 'string') {
             return `${accumulator} ${asStringArg(body[currentValue['prop']])}`;
         } else if ((typeof currentValue === 'object')) {
@@ -111,10 +112,51 @@ function rscript(reportFileName) {
     return resolveRscriptCommand(rscriptPath);
 }
 
+/**
+ * Normalize given string from escaped character
+ * @param str
+ * @returns {string}
+ */
 function normalizeEscapeString(str) {
     return String(str).replace(/'/g, `''`);
 }
 
+/**
+ * Utilities to delay some process
+ * @param ms
+ * @returns {Promise<unknown>}
+ */
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * concatenate string array as sql or statement
+ * @param columnTarget
+ * @param list
+ * @param and
+ * @returns {string|*}
+ */
+function concatenateAsSqlOr(columnTarget, list = [], and = true) {
+    if (list === null || list.length === 0 || list.length === 1 && list[0] === API_FOR_ALL_SELECTED) {
+        return '';
+    }
+
+    return  list.reduce((accumulator, currentValue, currentIndex) => {
+        return `${accumulator} trim(${columnTarget}) = trim('${normalizeEscapeString(currentValue)}') ${currentIndex < list.length - 1 ? 'or' : ')'}`
+    }, and ? ' and (' : ' (');
+}
+
+/**
+ * concatenate as sql between statement
+ * @param columnTarget
+ * @param start
+ * @param end
+ * @param and
+ */
+function concatenateAsSqlBetween(columnTarget, start, end, and = false) {
+    return `${and ? 'and (' : ' ('} ${columnTarget} between '${start}' and '${end}')`;
+}
 
 
 module.exports = {
@@ -125,5 +167,8 @@ module.exports = {
     responseStatus,
     resolveRscriptCommand,
     rscript,
-    normalizeEscapeString
+    normalizeEscapeString,
+    delay,
+    concatenateAsSqlOr,
+    concatenateAsSqlBetween
 };

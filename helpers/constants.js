@@ -7,6 +7,9 @@ const PRODUKSI_IKAN_PER_SUMBER_DAYA = 'produksi_ikan_per_sumber_daya';
 const STRUKTUR_UKURAN_IKAN_TERTANGKAP = 'struktur_ukuran_ikan_tertangkap';
 const ALL_WPP = 'Seluruh WPP';
 const ALL_RESOURCE = 'Seluruh Sumber Daya';
+const ALL_LOCATION = 'Seluruh Lokasi';
+const ALL_SPECIES = 'Seluruh Spesies';
+const API_FOR_ALL_SELECTED = 'Ht7fvF1yGXuHtrm9nEMV';
 
 const RSCRIPT_PATH = 'r-scripts';
 const PUBLIC_PATH = 'r-scripts\\images';
@@ -24,5 +27,8 @@ module.exports = {
     PUBLIC_PATH,
     APP_PORT,
     ALL_RESOURCE,
-    ALL_WPP
+    ALL_WPP,
+    ALL_LOCATION,
+    ALL_SPECIES,
+    API_FOR_ALL_SELECTED
 }

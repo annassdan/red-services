@@ -1,5 +1,5 @@
 const express = require('express');
-const {HUBUNGAN_PANJANG_BERAT, ALL_WPP, ALL_RESOURCE} = require("../../helpers/constants");
+const {HUBUNGAN_PANJANG_BERAT, ALL_WPP, ALL_RESOURCE, ALL_LOCATION, ALL_SPECIES} = require("../../helpers/constants");
 const {
     generateGraphicImageName,
     loggingRequestBody,
@@ -8,7 +8,7 @@ const {
     responseStatus,
     resolveRscriptCommand,
     rscript,
-    normalizeEscapeString
+    normalizeEscapeString, concatenateAsSqlOr, concatenateAsSqlBetween
 } = require("../../helpers/utilities");
 const {pool} = require("../../database/database");
 const router = express.Router();
@@ -66,7 +66,7 @@ router.post('/wpp', (req, res, next) => {
     const {start, end} = req.body;
     const query = `with source as (select trim(wpp) as wpp
                    from brpl_biologireproduksi
-                   where tanggal_sampling between '${start}' and '${end}')
+                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)} )
                    select wpp as value, wpp as label
                    from source
                    group by wpp
@@ -78,10 +78,12 @@ router.post('/wpp', (req, res, next) => {
             return;
         }
 
-        const responseBody = rows.length > 0 ? [
-            {value: ALL_WPP, label: ALL_WPP},
-            ...rows
-        ] : [];
+        const responseBody = rows && rows.length > 0 ? [
+            {
+                label: ALL_WPP,
+                options: rows
+            }
+        ] : (rows || []);
         res.status(200).json(responseBody);
     });
 });
@@ -94,13 +96,13 @@ router.post('/resources', (req, res, next) => {
     const {start, end, wpp} = req.body;
     const query = `with source as (select trim(uuid_sumber_daya) as sumber_daya
                    from brpl_biologireproduksi
-                   where (tanggal_sampling between '${start}' and '${end}') 
-                   and ('${normalizeEscapeString(wpp)}' = '${ALL_WPP}' or trim(wpp) = trim('${normalizeEscapeString(wpp)}')) )
+                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)} 
+                   ${concatenateAsSqlOr('wpp', wpp)} )
                    select sumber_daya as value, sumber_daya as label
                    from source
                    group by sumber_daya
                    order by sumber_daya`;
-    console.log(query)
+    console.log(query);
 
     pool.query(query, (error, {rows}) => {
         if (error) {
@@ -108,10 +110,12 @@ router.post('/resources', (req, res, next) => {
             return;
         }
 
-        const responseBody = rows.length > 0 ? [
-            {value: ALL_RESOURCE, label: ALL_RESOURCE},
-            ...rows
-        ] : [];
+        const responseBody = rows && rows.length > 0 ? [
+            {
+                label: ALL_RESOURCE,
+                options: rows
+            }
+        ] : (rows || []);
         res.status(200).json(responseBody);
     });
 });
@@ -123,13 +127,14 @@ router.post('/locations', (req, res, next) => {
     const {start, end, wpp, resource} = req.body;
     const query = `with source as (select trim(nama_lokasi_sampling) as nama_lokasi_sampling
                    from brpl_biologireproduksi
-                   where (tanggal_sampling between '${start}' and '${end}') 
-                   and ('${normalizeEscapeString(wpp)}' = '${ALL_WPP}' or trim(wpp) = trim('${normalizeEscapeString(wpp)}'))
-                   and ('${normalizeEscapeString(resource)}' = '${ALL_RESOURCE}' or trim(uuid_sumber_daya) = trim('${normalizeEscapeString(resource)}')) )
+                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)}  
+                   ${concatenateAsSqlOr('wpp', wpp)}
+                   ${concatenateAsSqlOr('uuid_sumber_daya', resource)} )
                    select nama_lokasi_sampling as value, nama_lokasi_sampling as label
                    from source
                    group by nama_lokasi_sampling
                    order by nama_lokasi_sampling`;
+    console.log(query);
 
     pool.query(query, (error, {rows}) => {
         if (error) {
@@ -137,7 +142,13 @@ router.post('/locations', (req, res, next) => {
             return;
         }
 
-        res.status(200).json(rows || []);
+        const responseBody = rows && rows.length > 0 ? [
+            {
+                label: ALL_LOCATION,
+                options: rows
+            }
+        ] : (rows || []);
+        res.status(200).json(responseBody);
     });
 });
 
@@ -149,14 +160,15 @@ router.post('/species', (req, res, next) => {
     const {start, end, wpp, resource, location} = req.body;
     const query = `with source as (select trim(uuid_spesies) as spesies
                    from brpl_biologireproduksi
-                   where (tanggal_sampling between '${start}' and '${end}')
-                   and ('${normalizeEscapeString(wpp)}' = '${ALL_WPP}' or trim(wpp) = trim('${normalizeEscapeString(wpp)}')) 
-                   and ('${normalizeEscapeString(resource)}' = '${ALL_RESOURCE}' or trim(uuid_sumber_daya) = trim('${normalizeEscapeString(resource)}'))
-                   and trim(nama_lokasi_sampling) = trim('${normalizeEscapeString(location)}') )
+                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)} 
+                   ${concatenateAsSqlOr('wpp', wpp)}
+                   ${concatenateAsSqlOr('uuid_sumber_daya', resource)} 
+                   ${concatenateAsSqlOr('nama_lokasi_sampling', location)} )
                    select spesies as value, spesies as label
                    from source
                    group by spesies
                    order by spesies`;
+    console.log(query);
 
     pool.query(query, (error, {rows}) => {
         if (error) {
@@ -164,7 +176,12 @@ router.post('/species', (req, res, next) => {
             return;
         }
 
-        res.status(200).json(rows || []);
+        res.status(200).json(rows.length > 0 ? [
+            {
+                label: ALL_SPECIES,
+                options: rows
+            }
+        ] : (rows || []));
     });
 });
 
