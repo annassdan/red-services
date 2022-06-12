@@ -49,11 +49,12 @@ speciesQuery <- param[6]
 lengthQuery <- param[7]
 weightQuery <- param[8]
 
+# Building query selector
 sqQuery <- paste("SELECT panjang, berat FROM brpl_biologireproduksidetail INNER JOIN brpl_biologireproduksi on brpl_biologireproduksi.uuid = brpl_biologireproduksidetail.uuid_biologireproduksi WHERE ",
  samplingDateQuery, wppQuery, resourceQuery, locationQuery, speciesQuery, lengthQuery, weightQuery)
 
+# Execute query to database
 q_panjangberat <- dbSendQuery(con, sqQuery)
-#
 
 panjangberat <- dbFetch(q_panjangberat, n=-1)
 colnames(panjangberat) <- c("Panjang","Berat (gram)")
