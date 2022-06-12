@@ -11,7 +11,7 @@ const {RSCRIPT_PATH, API_FOR_ALL_SELECTED} = require("./constants");
  * @returns {Promise<{stdout: undefined, stderr}|{stdout: (*|string), stderr: (*|undefined)}>}
  */
 function executeCommandLine(command, args = undefined) {
-    // console.log(command);
+    console.log(command);
     return execPromise(command)
         .then(({stdout}) => {
             // console.log(stdout);
@@ -43,6 +43,7 @@ function generateGraphicImageName(graphicName) {
 /**
  * Concatenate request params as string, used for R Script file arguments
  * @param body
+ * @param params
  */
 function concatenateRscriptArguments(body, params) {
     return params.reduce((accumulator, currentValue) => {
@@ -52,7 +53,7 @@ function concatenateRscriptArguments(body, params) {
         if (arr) {
             const list = body[prop];
             if (sqlColumn) {
-                const sql = concatenateAsSqlOr(sqlColumn, list, true, false);
+                const sql = concatenateAsSqlOr(sqlColumn, list, true);
                 return `${accumulator} ${asStringArg(sql)}`;
             } else {
                 const adder = list.reduce((str, current) => (typeof current === 'string' ? `${str} ${asStringArg(current)}` : `${str} ${current}`), '');
@@ -98,7 +99,7 @@ function responseStatus(bin) {
  * @returns {string}
  */
 function asStringArg(value) {
-    return `"${normalizeEscapeString(value === undefined ? undefined : String(value).trim())}"`;
+    return `"${String(value).trim()}"`;
 }
 
 /**
@@ -132,12 +133,12 @@ function rscript(reportFileName) {
  * @param str
  * @returns {string}
  */
-function normalizeEscapeGlobalString(str) {
-    return String(str).replace(/'/g, `''`);
-}
-
 function normalizeEscapeString(str) {
-    return String(str).replace(/^'/, `''`);
+    if (str.includes(`'`)) {
+        return String(str).replace(/'/g, `''`);
+    } else {
+        return str;
+    }
 }
 
 /**
@@ -154,10 +155,9 @@ function delay(ms) {
  * @param columnTarget
  * @param list
  * @param andPrefix
- * @param escapeGlobal
  * @returns {string|*}
  */
-function concatenateAsSqlOr(columnTarget, list = [], andPrefix = true, escapeGlobal = true) {
+function concatenateAsSqlOr(columnTarget, list = [], andPrefix = true) {
     if (list === null || list.length === 0 || list.length === 1 && list[0] === API_FOR_ALL_SELECTED) {
         return '';
     }
@@ -166,8 +166,7 @@ function concatenateAsSqlOr(columnTarget, list = [], andPrefix = true, escapeGlo
         if (typeof currentValue === 'number') {
             return `${accumulator} ${columnTarget} = ${normalizeEscapeString(currentValue)} ${currentIndex < list.length - 1 ? 'or' : ')'}`;
         } else {
-            const value = escapeGlobal ? normalizeEscapeGlobalString(currentValue) : normalizeEscapeString(currentValue);
-            return `${accumulator} trim(${columnTarget}) = trim('${value}') ${currentIndex < list.length - 1 ? 'or' : ')'}`;
+            return `${accumulator} trim(${columnTarget}) = trim('${normalizeEscapeString(currentValue)}') ${currentIndex < list.length - 1 ? 'or' : ')'}`;
         }
     }, andPrefix ? 'and (' : ' (');
 }
@@ -192,15 +191,13 @@ function concatenateAsSqlBetween(columnTarget, start, end, andPrefix = false) {
  * @param columnTarget
  * @param value
  * @param andPrefix
- * @param escapeGlobal
  * @returns {string}
  */
-function concatenateAsSql(columnTarget, value, andPrefix = false, escapeGlobal = true) {
+function concatenateAsSql(columnTarget, value, andPrefix = false) {
     if (typeof value === 'number') {
         return `${andPrefix ? 'and (' : ' ('} ${columnTarget} = ${value})`;
     } else {
-        const c = escapeGlobal ? normalizeEscapeGlobalString(value) : normalizeEscapeString(value);
-        return `${andPrefix ? 'and (' : ' ('} trim('${columnTarget}') = trim('${c}'))`;
+        return `${andPrefix ? 'and (' : ' ('} trim('${columnTarget}') = trim('${normalizeEscapeString(value)}'))`;
     }
 }
 
