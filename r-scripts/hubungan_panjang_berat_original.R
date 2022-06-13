@@ -23,9 +23,6 @@ library(viridis)
 
 options(echo = TRUE)
 
-#remove all object
-rm(list=ls())
-
 param <- commandArgs(trailingOnly=TRUE)
 
 #koneksi ke DB

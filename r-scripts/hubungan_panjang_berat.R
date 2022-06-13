@@ -28,7 +28,7 @@ library(viridis)
 library(stringr)
 
 
-setwd("r-scripts/images/")
+# setwd("r-scripts/images/")
 # setwd("C:/R/RED/")
 # imagePath <- "r-scripts/images/"
 
@@ -59,7 +59,7 @@ on.exit(dbDisconnect(drv))
 # species <- trimStr(executedArgs[3])
 # tahun <- as.numeric(trimStr(executedArgs[4]))
 # lokasi <- trimStr(executedArgs[5])
-wpp <- as.numeric(trimStr(executedArgs[2]))
+wpp <- "\""
 species <- trimStr(executedArgs[5])
 tahun <- as.numeric(trimStr(executedArgs[3]))
 lokasi <- trimStr(executedArgs[4])

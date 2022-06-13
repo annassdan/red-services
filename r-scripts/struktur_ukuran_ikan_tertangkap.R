@@ -23,15 +23,12 @@ library(viridis)
 
 options(echo = TRUE)
 
-#remove all object
-rm(list=ls())
-
-roundUpNice <- function(x, nice=c(1,2,4,5,6,8,10)) {
-  if(length(x) != 1) stop("'x' must be of length 1")
+roundUpNice <- function(x, nice = c(1, 2, 4, 5, 6, 8, 10)) {
+  if (length(x) != 1) stop("'x' must be of length 1")
   10^floor(log10(x)) * nice[[which(x <= 10^floor(log10(x)) * nice)[[1]]]]
 }
 
-param <- commandArgs(trailingOnly=TRUE)
+param <- commandArgs(trailingOnly = TRUE)
 
 #koneksi ke DB
 con <- DBI::dbConnect(
@@ -58,14 +55,14 @@ sql_query <- paste("
                 from brpl_biologiukuran
                          inner join brpl_biologiukurandetail
                                     on brpl_biologiukuran.uuid = brpl_biologiukurandetail.uuid_biologiukuran
-                where
-  ", sampling_date_query, wpp_query, resource_query, location_query, species_query, length_query,
-  ") select DISTINCT panjang, count(panjang) as jumlah
+                where ",
+                   sampling_date_query, wpp_query, resource_query, location_query, species_query, length_query
+  , ") select DISTINCT panjang, count(panjang) as jumlah
   from source group by panjang")
 
 q_freq_ukuran <- dbSendQuery(con, sql_query)
 
-ukuran <- dbFetch(q_freq_ukuran, n=-1)
+ukuran <- dbFetch(q_freq_ukuran, n = -1)
 ukuran$panjang_2 <- as.numeric(round(ukuran$panjang))
 ukuran$panjang_2[ukuran$panjang_2 %% 2 == 1] <- ukuran$panjang_2[ukuran$panjang_2 %% 2 == 1] - 1
 df <- data.frame(aggregate(x = ukuran$jumlah, by = list(ukuran$panjang_2), FUN = "sum"))
@@ -80,14 +77,14 @@ panjang_freq <- df$Panjang[df$Frekuensi == maxy]
 
 fig_ukuran <-
   ggplot(df, aes(Panjang)) +
-  geom_col(aes(y = Frekuensi), fill = 'springgreen3') +
-  scale_y_continuous(limits= c(0,maxy), expand = c(0,0)) +
-  scale_x_continuous(breaks = seq(minx, maxx, by = 4), expand = c(0,0)) +
-  #ggtitle(paste0(species,". ", lokasi,". ", tahun)) +
-  theme_classic()
+    geom_col(aes(y = Frekuensi), fill = 'springgreen3') +
+    scale_y_continuous(limits = c(0, maxy), expand = c(0, 0)) +
+    scale_x_continuous(breaks = seq(minx, maxx, by = 4), expand = c(0, 0)) +
+    #ggtitle(paste0(species,". ", lokasi,". ", tahun)) +
+    theme_classic()
 #theme(plot.title = element_text(color="black", size=14, face="bold", hjust = 0.5))
 
-jpeg(paste0("r-scripts/images/", file_name,'.jpg'))
+jpeg(paste0("r-scripts/images/", file_name, '.jpg'))
 fig_ukuran
 dev.off()
 
