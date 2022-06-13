@@ -8,7 +8,7 @@ const {
     responseStatus,
     resolveRscriptCommand,
     rscript,
-    concatenateAsSqlOr, concatenateAsSqlBetween
+    concatenateAsSqlOr, concatenateAsSqlBetween, predefineResponse
 } = require("../../helpers/utilities");
 const {pool} = require("../../database/database");
 const router = express.Router();
@@ -18,7 +18,7 @@ const router = express.Router();
  */
 router.post('/', async (req, res) => {
     const graphicImageName = generateGraphicImageName(HUBUNGAN_PANJANG_BERAT);
-    loggingRequestBody(req.body);
+    // loggingRequestBody(req.body);
 
     const restArgs = concatenateRscriptArguments(req.body, [
         // { prop = undefined, props = [], str = false, arr = false, between = false, sqlColumn = '', first: false},
@@ -55,8 +55,8 @@ router.post('/', async (req, res) => {
 router.post('/wpp', (req, res, next) => {
     const {start, end} = req.body;
     const query = `with source as (select trim(wpp) as wpp
-                   from brpl_biologireproduksi
-                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)} )
+                                   from brpl_biologireproduksi
+                                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)})
                    select wpp as value, wpp as label
                    from source
                    group by wpp
@@ -68,13 +68,7 @@ router.post('/wpp', (req, res, next) => {
             return;
         }
 
-        const responseBody = rows && rows.length > 0 ? [
-            {
-                label: `${ALL_WPP}&nbsp;&nbsp;(${rows.length})`,
-                options: rows
-            }
-        ] : (rows || []);
-        res.status(200).json(responseBody);
+        predefineResponse(res, rows, ALL_WPP);
     });
 });
 
@@ -85,13 +79,13 @@ router.post('/wpp', (req, res, next) => {
 router.post('/resources', (req, res, next) => {
     const {start, end, wpp} = req.body;
     const query = `with source as (select trim(uuid_sumber_daya) as sumber_daya
-                   from brpl_biologireproduksi
-                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)} 
-                   ${concatenateAsSqlOr('wpp', wpp)} )
-                   select sumber_daya as value, sumber_daya as label
-                   from source
-                   group by sumber_daya
-                   order by sumber_daya`;
+                                   from brpl_biologireproduksi
+                                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)}
+                       ${concatenateAsSqlOr('wpp', wpp)} )
+    select sumber_daya as value, sumber_daya as label
+    from source
+    group by sumber_daya
+    order by sumber_daya`;
     console.log(query);
 
     pool.query(query, (error, {rows}) => {
@@ -100,13 +94,7 @@ router.post('/resources', (req, res, next) => {
             return;
         }
 
-        const responseBody = rows && rows.length > 0 ? [
-            {
-                label: `${ALL_RESOURCE}&nbsp;&nbsp;(${rows.length})`,
-                options: rows
-            }
-        ] : (rows || []);
-        res.status(200).json(responseBody);
+        predefineResponse(res, rows, ALL_RESOURCE);
     });
 });
 
@@ -116,14 +104,14 @@ router.post('/resources', (req, res, next) => {
 router.post('/locations', (req, res, next) => {
     const {start, end, wpp, resource} = req.body;
     const query = `with source as (select trim(nama_lokasi_sampling) as nama_lokasi_sampling
-                   from brpl_biologireproduksi
-                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)}  
-                   ${concatenateAsSqlOr('wpp', wpp)}
-                   ${concatenateAsSqlOr('uuid_sumber_daya', resource)} )
-                   select nama_lokasi_sampling as value, nama_lokasi_sampling as label
-                   from source
-                   group by nama_lokasi_sampling
-                   order by nama_lokasi_sampling`;
+                                   from brpl_biologireproduksi
+                                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)}
+                       ${concatenateAsSqlOr('wpp', wpp)}
+                       ${concatenateAsSqlOr('uuid_sumber_daya', resource)} )
+    select nama_lokasi_sampling as value, nama_lokasi_sampling as label
+    from source
+    group by nama_lokasi_sampling
+    order by nama_lokasi_sampling`;
     console.log(query);
 
     pool.query(query, (error, {rows}) => {
@@ -132,13 +120,7 @@ router.post('/locations', (req, res, next) => {
             return;
         }
 
-        const responseBody = rows && rows.length > 0 ? [
-            {
-                label: `${ALL_LOCATION}&nbsp;&nbsp;(${rows.length})`,
-                options: rows
-            }
-        ] : (rows || []);
-        res.status(200).json(responseBody);
+        predefineResponse(res, rows, ALL_LOCATION);
     });
 });
 
@@ -149,15 +131,15 @@ router.post('/locations', (req, res, next) => {
 router.post('/species', (req, res, next) => {
     const {start, end, wpp, resource, location} = req.body;
     const query = `with source as (select trim(uuid_spesies) as spesies
-                   from brpl_biologireproduksi
-                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)} 
-                   ${concatenateAsSqlOr('wpp', wpp)}
-                   ${concatenateAsSqlOr('uuid_sumber_daya', resource)} 
-                   ${concatenateAsSqlOr('nama_lokasi_sampling', location)} )
-                   select spesies as value, spesies as label
-                   from source
-                   group by spesies
-                   order by spesies`;
+                                   from brpl_biologireproduksi
+                                   where ${concatenateAsSqlBetween('tanggal_sampling', start, end)}
+                       ${concatenateAsSqlOr('wpp', wpp)}
+                       ${concatenateAsSqlOr('uuid_sumber_daya', resource)}
+                       ${concatenateAsSqlOr('nama_lokasi_sampling', location)} )
+    select spesies as value, spesies as label
+    from source
+    group by spesies
+    order by spesies`;
     console.log(query);
 
     pool.query(query, (error, {rows}) => {
@@ -166,12 +148,7 @@ router.post('/species', (req, res, next) => {
             return;
         }
 
-        res.status(200).json(rows.length > 0 ? [
-            {
-                label: `${ALL_SPECIES}&nbsp;&nbsp;(${rows.length})`,
-                options: rows
-            }
-        ] : (rows || []));
+        predefineResponse(res, rows, ALL_SPECIES);
     });
 });
 

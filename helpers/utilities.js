@@ -2,7 +2,7 @@ const performanceNow = require("performance-now");
 const util = require("util");
 const {exec} = require("child_process");
 const execPromise = util.promisify(exec);
-const {RSCRIPT_PATH, API_FOR_ALL_SELECTED} = require("./constants");
+const {RSCRIPT_PATH, API_FOR_ALL_SELECTED, ALL_SPECIES, ALL_RESOURCE} = require("./constants");
 
 /**
  * Execute string command to terminal command or command prompt
@@ -201,6 +201,23 @@ function concatenateAsSql(columnTarget, value, andPrefix = false) {
     }
 }
 
+/**
+ *
+ * @param res
+ * @param rows
+ * @param allHeader
+ */
+function predefineResponse(res, rows, allHeader) {
+    const responseBody = rows.length > 0 ? [
+        {
+            label: `${allHeader}&nbsp;&nbsp;(${rows.length})`,
+            options: rows
+        }
+    ] : (rows || []);
+
+    res.status(200).json(responseBody);
+}
+
 
 module.exports = {
     executeCommandLine,
@@ -213,5 +230,6 @@ module.exports = {
     normalizeEscapeString,
     delay,
     concatenateAsSqlOr,
-    concatenateAsSqlBetween
+    concatenateAsSqlBetween,
+    predefineResponse
 };

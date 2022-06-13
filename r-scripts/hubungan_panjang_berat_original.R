@@ -26,7 +26,7 @@ options(echo = TRUE)
 #remove all object
 rm(list=ls())
 
-param = commandArgs(trailingOnly=TRUE)
+param <- commandArgs(trailingOnly=TRUE)
 
 #koneksi ke DB
 con <- DBI::dbConnect(
@@ -49,8 +49,11 @@ length_query <- param[7]
 weight_query <- param[8]
 
 # Building query selector
-sql_query <- paste("SELECT panjang, berat FROM brpl_biologireproduksidetail INNER JOIN brpl_biologireproduksi on brpl_biologireproduksi.uuid = brpl_biologireproduksidetail.uuid_biologireproduksi WHERE ",
- sampling_date_query, wpp_query, resource_query, location_query, species_query, length_query, weight_query)
+sql_query <- paste("
+  SELECT panjang, berat FROM brpl_biologireproduksidetail
+  INNER JOIN brpl_biologireproduksi on brpl_biologireproduksi.uuid = brpl_biologireproduksidetail.uuid_biologireproduksi
+  WHERE
+", sampling_date_query, wpp_query, resource_query, location_query, species_query, length_query, weight_query)
 
 # Execute query to database
 q_panjangberat <- dbSendQuery(con, sql_query)
