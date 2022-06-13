@@ -22,12 +22,16 @@ library(scales)
 library(viridis)
 
 options(echo = TRUE)
-# setwd("C:/R/BRPL/")
 
 #remoce all object
 rm(list=ls())
 
-param = commandArgs(trailingOnly=TRUE)
+roundUpNice <- function(x, nice=c(1,2,4,5,6,8,10)) {
+  if(length(x) != 1) stop("'x' must be of length 1")
+  10^floor(log10(x)) * nice[[which(x <= 10^floor(log10(x)) * nice)[[1]]]]
+}
+
+param <- commandArgs(trailingOnly=TRUE)
 
 #koneksi ke DB
 con <- DBI::dbConnect(
@@ -36,14 +40,24 @@ con <- DBI::dbConnect(
   host = "localhost",
   port = "5432",
   user = "postgres",
-  password = "1234"
+  password = "talasbogor"
 )
 on.exit(dbDisconnect(drv))
 
-q_cpue <- dbSendQuery(con, paste0("select jumlah_hari_menangkap, total_tangkapan_volume, extract(month from tanggal_pendaratan) as Bulan
-    from brpl_rincianpendaratan inner join brpl_pendaratan bp on bp.uuid = brpl_rincianpendaratan.uuid_pendaratan
-where wpp = '",param[2],"' AND tanggal_pendaratan between BETWEEN '", param[4],"' AND '",param[5],"' 
-  AND nama_lokasi_pendaratan = '",param[3],"';"))
+file_name <- param[1]
+sampling_date_query <- param[2]
+wpp_query <- param[3]
+resource_query <- param[4]
+location_query <- param[5]
+
+# Building query selector
+sql_query <- paste("
+  select jumlah_hari_menangkap, round(cast(total_tangkapan_volume as numeric), 4) as total_tangkapan_volume, extract(month from tanggal_pendaratan) as Bulan
+  from brpl_rincianpendaratan inner join brpl_pendaratan on brpl_pendaratan.uuid = brpl_rincianpendaratan.uuid_pendaratan
+  where
+", sampling_date_query, wpp_query, resource_query, location_query)
+
+q_cpue <- dbSendQuery(con,sql_query)
 
 cpue <- dbFetch(q_cpue, n=-1)
 df.cpue <- ddply(cpue, .(bulan), summarise, Catch = sum(total_tangkapan_volume), daycatch = sum(jumlah_hari_menangkap))
@@ -64,7 +78,7 @@ fig_cpue <-
   theme_classic()
 
 
-jpeg(paste0("r-scripts/images/", param[1],'.jpg'))
+jpeg(paste0("r-scripts/images/", file_name,'.jpg'))
 fig_cpue
 dev.off()
 

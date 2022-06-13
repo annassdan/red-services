@@ -28,11 +28,9 @@ router.post('/', async (req, res) => {
         {prop: 'species', arr: true, sqlColumn: 'uuid_spesies'},
         {props: ['minLength', 'maxLength'], between: true, sqlColumn: 'panjang'},
     ]);
-
-    console.log(restArgs);
     const command = `rscript ${rscript(STRUKTUR_UKURAN_IKAN_TERTANGKAP)} ${graphicImageName} ${restArgs}`;
     const {stderr} = await executeCommandLine(resolveRscriptCommand(command));
-    console.log('SELESAI')
+
     //
     if (stderr) {
         res.status(500).json({
