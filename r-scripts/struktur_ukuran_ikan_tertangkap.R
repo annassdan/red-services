@@ -22,12 +22,16 @@ library(scales)
 library(viridis)
 
 options(echo = TRUE)
-# setwd("C:/R/BRPL/")
 
-#remoce all object
+#remove all object
 rm(list=ls())
 
-param = commandArgs(trailingOnly=TRUE)
+roundUpNice <- function(x, nice=c(1,2,4,5,6,8,10)) {
+  if(length(x) != 1) stop("'x' must be of length 1")
+  10^floor(log10(x)) * nice[[which(x <= 10^floor(log10(x)) * nice)[[1]]]]
+}
+
+param <- commandArgs(trailingOnly=TRUE)
 
 #koneksi ke DB
 con <- DBI::dbConnect(
@@ -40,27 +44,31 @@ con <- DBI::dbConnect(
 )
 on.exit(dbDisconnect(drv))
 
-other_species = ""
-if (length(param)>9) {
-  for (y in 10: length(param))
-  {
-    other_species = paste0(other_species," OR uuid_spesies = '",param[y],"' ")
-  }
-}
+file_name <- param[1]
+sampling_date_query <- param[2]
+wpp_query <- param[3]
+resource_query <- param[4]
+location_query <- param[5]
+species_query <- param[6]
+length_query <- param[7]
 
-q_freq_ukuran <- dbSendQuery(con, paste0("SELECT DISTINCT panjang, count(panjang) AS jumlah 
-  FROM brpl_biologiukuran INNER JOIN brpl_biologiukurandetail bb ON brpl_biologiukuran.uuid = bb.uuid_biologiukuran
-  INNER JOIN brpl_biologiukuranrinciansample b ON brpl_biologiukuran.uuid = b.uuid_biologiukuran
-  WHERE wpp = '", param[2],"' AND tanggal_sampling between BETWEEN '", param[4],"' AND '",param[5],"' 
-  AND nama_lokasi_sampling = '",param[3],"' AND uuid_sumber_daya = '", param[6],"' 
-  AND panjang BETWEEN '",param[7],"' AND '",param[8],"'
-  AND uuid_species = '",param[9],"' ",other_species,"
-  GROUP BY panjang;"))
+# Building query selector
+sql_query <- paste("
+  with source as (select round(cast(panjang as numeric), 4) as panjang
+                from brpl_biologiukuran
+                         inner join brpl_biologiukurandetail
+                                    on brpl_biologiukuran.uuid = brpl_biologiukurandetail.uuid_biologiukuran
+                where
+  ", sampling_date_query, wpp_query, resource_query, location_query, species_query, length_query,
+  ") select DISTINCT panjang, count(panjang) as jumlah
+  from source group by panjang")
+
+q_freq_ukuran <- dbSendQuery(con, sql_query)
 
 ukuran <- dbFetch(q_freq_ukuran, n=-1)
 ukuran$panjang_2 <- as.numeric(round(ukuran$panjang))
-ukuran$panjang_2[ukuran$panjang_2 %% 2 == 1] <- ukuran$panjang_2[ukuran$panjang_2 %% 2 == 1] - 1 
-df = data.frame(aggregate(x = ukuran$jumlah, by = list(ukuran$panjang_2), FUN = "sum"))
+ukuran$panjang_2[ukuran$panjang_2 %% 2 == 1] <- ukuran$panjang_2[ukuran$panjang_2 %% 2 == 1] - 1
+df <- data.frame(aggregate(x = ukuran$jumlah, by = list(ukuran$panjang_2), FUN = "sum"))
 colnames(df) <- c("Panjang", "Frekuensi")
 minx <- as.numeric(min(df$Panjang))
 maxx <- as.numeric(max(df$Panjang))
@@ -75,11 +83,11 @@ fig_ukuran <-
   geom_col(aes(y = Frekuensi), fill = 'springgreen3') +
   scale_y_continuous(limits= c(0,maxy), expand = c(0,0)) +
   scale_x_continuous(breaks = seq(minx, maxx, by = 4), expand = c(0,0)) +
-  #ggtitle(paste0(species,". ", lokasi,". ", tahun)) + 
+  #ggtitle(paste0(species,". ", lokasi,". ", tahun)) +
   theme_classic()
 #theme(plot.title = element_text(color="black", size=14, face="bold", hjust = 0.5))
 
-jpeg(paste0("r-scripts/images/", param[1],'.jpg'))
+jpeg(paste0("r-scripts/images/", file_name,'.jpg'))
 fig_ukuran
 dev.off()
 
