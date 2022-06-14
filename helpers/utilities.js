@@ -218,6 +218,14 @@ function predefineResponse(res, rows, allHeader) {
     res.status(200).json(responseBody);
 }
 
+function resolvePath(path) {
+    if (process.platform === 'win32') {
+        return path;
+    } else {
+        return path.replace(/\\/g, '/');
+    }
+}
+
 
 module.exports = {
     executeCommandLine,
@@ -231,5 +239,6 @@ module.exports = {
     delay,
     concatenateAsSqlOr,
     concatenateAsSqlBetween,
-    predefineResponse
+    predefineResponse,
+    resolvePath
 };
