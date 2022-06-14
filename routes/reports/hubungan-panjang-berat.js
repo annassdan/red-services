@@ -52,7 +52,7 @@ router.post('/', async (req, res) => {
 /**
  * Datasource for predefined data wpp on selected date range for Hubungan Panjang Berat Graphic
  */
-router.post('/wpp', (req, res, next) => {
+router.post('/wpp', async (req, res, next) => {
     const {start, end} = req.body;
     const query = `with source as (select trim(wpp) as wpp
                                    from brpl_biologireproduksi
@@ -76,7 +76,7 @@ router.post('/wpp', (req, res, next) => {
 /**
  * Datasource for predefined data resource on selected date range for Hubungan Panjang Berat Graphic
  */
-router.post('/resources', (req, res, next) => {
+router.post('/resources', async (req, res, next) => {
     const {start, end, wpp} = req.body;
     const query = `with source as (select trim(uuid_sumber_daya) as sumber_daya
                                    from brpl_biologireproduksi
@@ -101,7 +101,7 @@ router.post('/resources', (req, res, next) => {
 /**
  * Datasource for predefined data locations on selected date range for Hubungan Panjang Berat Graphic
  */
-router.post('/locations', (req, res, next) => {
+router.post('/locations', async (req, res, next) => {
     const {start, end, wpp, resource} = req.body;
     const query = `with source as (select trim(nama_lokasi_sampling) as nama_lokasi_sampling
                                    from brpl_biologireproduksi
@@ -128,7 +128,7 @@ router.post('/locations', (req, res, next) => {
 /**
  * Datasource for predefined data species on selected date range for Hubungan Panjang Berat Graphic
  */
-router.post('/species', (req, res, next) => {
+router.post('/species', async (req, res, next) => {
     const {start, end, wpp, resource, location} = req.body;
     const query = `with source as (select trim(uuid_spesies) as spesies
                                    from brpl_biologireproduksi

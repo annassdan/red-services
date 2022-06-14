@@ -47,7 +47,7 @@ router.post('/', async (req, res) => {
 /**
  * Datasource for predefined data wpp on selected date range for Produksi Ikan Per Sumber Daya  Graphic
  */
-router.post('/wpp', (req, res, next) => {
+router.post('/wpp', async (req, res, next) => {
     const {start, end} = req.body;
     const query = `with landing as (select trim(wpp) as wpp
                                     from brpl_pendaratan
@@ -68,7 +68,7 @@ router.post('/wpp', (req, res, next) => {
 });
 
 
-router.post('/resources', (req, res, next) => {
+router.post('/resources', async (req, res, next) => {
     const {start, end, wpp} = req.body;
     const query = `with landing as (select trim(uuid_sumber_daya) as sumber_daya
                                     from brpl_pendaratan
@@ -92,7 +92,7 @@ router.post('/resources', (req, res, next) => {
 /**
  * Datasource for predefined data locations on selected date range for Produksi Ikan Per Sumber Daya Graphic
  */
-router.post('/locations', (req, res, next) => {
+router.post('/locations', async (req, res, next) => {
     const {start, end, wpp, resource} = req.body;
     const query = `with landing as (select trim(nama_lokasi_pendaratan) as nama_lokasi_pendaratan
                                     from brpl_pendaratan
