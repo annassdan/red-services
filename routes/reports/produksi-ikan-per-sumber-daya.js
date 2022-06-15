@@ -10,13 +10,14 @@ const {
     rscript, normalizeEscapeString, concatenateAsSqlBetween, concatenateAsSqlOr, predefineResponse
 } = require("../../helpers/utilities");
 const {pool} = require("../../database/database");
+const {addGeneratedImage} = require("../authorization");
 const router = express.Router();
 
 /**
  * Route to generate report result for Produksi Ikan Per Sumber Daya Graphic
  */
 router.post('/', async (req, res) => {
-    const graphicImageName = generateGraphicImageName(PRODUKSI_IKAN_PER_SUMBER_DAYA);
+    const {graphicImageName, requestKey} = req.body;
     loggingRequestBody(req.body);
 
     const restArgs = concatenateRscriptArguments(req.body, [
@@ -38,6 +39,7 @@ router.post('/', async (req, res) => {
         return;
     }
 
+    addGeneratedImage(requestKey, `${graphicImageName}${__image_extention}`);
     res.status(200).json({
         status: responseStatus(1),
         graphicImageName: `${graphicImageName}${__image_extention}`

@@ -7,16 +7,17 @@ const {
     executeCommandLine,
     responseStatus,
     resolveRscriptCommand,
-    rscript, normalizeEscapeString, concatenateAsSqlBetween, concatenateAsSqlOr, predefineResponse
+    rscript, normalizeEscapeString, concatenateAsSqlBetween, concatenateAsSqlOr, predefineResponse, selectSqlColumn
 } = require("../../helpers/utilities");
 const {pool} = require("../../database/database");
+const {addGeneratedImage} = require("../authorization");
 const router = express.Router();
 
 /**
  * Route to generate report result for CPUE Graphic
  */
 router.post('/', async (req, res) => {
-    const graphicImageName = generateGraphicImageName(CPUE);
+    const {graphicImageName, requestKey} = req.body;
     loggingRequestBody(req.body);
 
     const restArgs = concatenateRscriptArguments(req.body, [
@@ -38,6 +39,7 @@ router.post('/', async (req, res) => {
         return;
     }
 
+    addGeneratedImage(requestKey, `${graphicImageName}${__image_extention}`);
     res.status(200).json({
         status: responseStatus(1),
         graphicImageName: `${graphicImageName}${__image_extention}`
@@ -50,7 +52,7 @@ router.post('/', async (req, res) => {
  */
 router.post('/wpp', async (req, res, next) => {
     const {start, end} = req.body;
-    const query = `with landing as (select trim(wpp) as wpp
+    const query = `with landing as (select ${selectSqlColumn('wpp')} as wpp
                                     from brpl_pendaratan
                                     where ${concatenateAsSqlBetween('tanggal_pendaratan', start, end)})
                    select wpp as value, wpp as label
@@ -71,8 +73,8 @@ router.post('/wpp', async (req, res, next) => {
 
 router.post('/resources', async (req, res, next) => {
     const {start, end, wpp} = req.body;
-    const query = `with landing as (select trim(uuid_sumber_daya) as sumber_daya
-                                    from brpl_pendaratan
+    const query = `with landing as (select ${selectSqlColumn('uuid_sumber_daya')} as sumber_daya
+                                    from brpl_pendaratan 
                                     where ${concatenateAsSqlBetween('tanggal_pendaratan', start, end)}
                        ${concatenateAsSqlOr('wpp', wpp)} )
     select sumber_daya as value, sumber_daya as label
@@ -96,7 +98,7 @@ router.post('/resources', async (req, res, next) => {
  */
 router.post('/locations', async (req, res, next) => {
     const {start, end, wpp, resource} = req.body;
-    const query = `with landing as (select trim(nama_lokasi_pendaratan) as nama_lokasi_pendaratan
+    const query = `with landing as (select ${selectSqlColumn('nama_lokasi_pendaratan')} as nama_lokasi_pendaratan
                                     from brpl_pendaratan
                                     where ${concatenateAsSqlBetween('tanggal_pendaratan', start, end)}
                        ${concatenateAsSqlOr('wpp', wpp)}

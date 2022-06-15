@@ -5,11 +5,16 @@ const HASIL_TANGKAPAN_PER_TRIP = 'hasil_tangkapan_per_trip';
 const PRODUKSI_IKAN_PER_ALAT_TANGKAP = 'produksi_ikan_per_alat_tangkap';
 const PRODUKSI_IKAN_PER_SUMBER_DAYA = 'produksi_ikan_per_sumber_daya';
 const STRUKTUR_UKURAN_IKAN_TERTANGKAP = 'struktur_ukuran_ikan_tertangkap';
+const REPORT_URLS = [
+    HUBUNGAN_PANJANG_BERAT, CPUE, LPUE, HASIL_TANGKAPAN_PER_TRIP,
+    PRODUKSI_IKAN_PER_ALAT_TANGKAP, PRODUKSI_IKAN_PER_SUMBER_DAYA, STRUKTUR_UKURAN_IKAN_TERTANGKAP
+];
 const ALL_WPP = 'Seluruh WPP';
 const ALL_RESOURCE = 'Seluruh Sumber Daya';
 const ALL_LOCATION = 'Seluruh Lokasi';
 const ALL_SPECIES = 'Seluruh Spesies';
 const API_FOR_ALL_SELECTED = 'Ht7fvF1yGXuHtrm9nEMV';
+const AUTHORIZATION_URL = '/auth-red';
 
 const RSCRIPT_PATH = 'r-scripts';
 const PUBLIC_PATH = 'r-scripts\\images';
@@ -30,5 +35,7 @@ module.exports = {
     ALL_WPP,
     ALL_LOCATION,
     ALL_SPECIES,
-    API_FOR_ALL_SELECTED
+    API_FOR_ALL_SELECTED,
+    REPORT_URLS,
+    AUTHORIZATION_URL
 }

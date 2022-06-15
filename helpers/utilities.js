@@ -2,7 +2,8 @@ const performanceNow = require("performance-now");
 const util = require("util");
 const {exec} = require("child_process");
 const execPromise = util.promisify(exec);
-const {RSCRIPT_PATH, API_FOR_ALL_SELECTED, ALL_SPECIES, ALL_RESOURCE} = require("./constants");
+const {RSCRIPT_PATH, API_FOR_ALL_SELECTED, ALL_SPECIES, ALL_RESOURCE, PUBLIC_PATH} = require("./constants");
+const fs = require("fs");
 
 /**
  * Execute string command to terminal command or command prompt
@@ -150,6 +151,15 @@ function delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function sqlValueWrapper(value) {
+    // return `initcap(lower(trim(${value})))`;
+    return `trim(${value})`;
+}
+
+function selectSqlColumn(columnName) {
+    return sqlValueWrapper(columnName);
+}
+
 /**
  * concatenate string array as sql or statement
  * @param columnTarget
@@ -166,7 +176,7 @@ function concatenateAsSqlOr(columnTarget, list = [], andPrefix = true) {
         if (typeof currentValue === 'number') {
             return `${accumulator} ${columnTarget} = ${normalizeEscapeString(currentValue)} ${currentIndex < list.length - 1 ? 'or' : ')'}`;
         } else {
-            return `${accumulator} trim(${columnTarget}) = trim('${normalizeEscapeString(currentValue)}') ${currentIndex < list.length - 1 ? 'or' : ')'}`;
+            return `${accumulator} ${selectSqlColumn(columnTarget)} = ${sqlValueWrapper(`'${normalizeEscapeString(currentValue)}'`)} ${currentIndex < list.length - 1 ? 'or' : ')'}`;
         }
     }, andPrefix ? 'and (' : ' (');
 }
@@ -197,12 +207,12 @@ function concatenateAsSql(columnTarget, value, andPrefix = false) {
     if (typeof value === 'number') {
         return `${andPrefix ? 'and (' : ' ('} ${columnTarget} = ${value})`;
     } else {
-        return `${andPrefix ? 'and (' : ' ('} trim('${columnTarget}') = trim('${normalizeEscapeString(value)}'))`;
+        return `${andPrefix ? 'and (' : ' ('} ${selectSqlColumn(columnTarget)} = ${sqlValueWrapper('${normalizeEscapeString(value)}')})`;
     }
 }
 
 /**
- *
+ * Predefine structure response for vueform multiselect
  * @param res
  * @param rows
  * @param allHeader
@@ -218,11 +228,40 @@ function predefineResponse(res, rows, allHeader) {
     res.status(200).json(responseBody);
 }
 
+/**
+ * Resolve path
+ * @param path
+ * @returns {*}
+ */
 function resolvePath(path) {
     if (process.platform === 'win32') {
         return path;
     } else {
         return path.replace(/\\/g, '/');
+    }
+}
+
+
+/**
+ *
+ * @param imageName
+ * @returns {*}
+ */
+function resolveImagePath(imageName) {
+    return resolvePath(`${__project_root}\\${PUBLIC_PATH}\\${imageName}`);
+}
+
+/**
+ * Remove file/image based on given path
+ * @param path
+ */
+function removeImage(path) {
+    try {
+        fs.unlinkSync(path);
+        return true;
+    } catch(err) {
+        console.error(err);
+        return false;
     }
 }
 
@@ -240,5 +279,8 @@ module.exports = {
     concatenateAsSqlOr,
     concatenateAsSqlBetween,
     predefineResponse,
-    resolvePath
+    resolvePath,
+    removeImage,
+    selectSqlColumn,
+    resolveImagePath
 };
