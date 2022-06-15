@@ -10,7 +10,8 @@ const {
     rscript, normalizeEscapeString, concatenateAsSqlBetween, concatenateAsSqlOr, predefineResponse
 } = require("../../helpers/utilities");
 const {pool} = require("../../database/database");
-const {addGeneratedImage} = require("../authorization");
+const {addGeneratedImage, addPid} = require("../authorization");
+const {exec} = require("child_process");
 const router = express.Router();
 
 /**
@@ -28,22 +29,22 @@ router.post('/', async (req, res) => {
         {prop: 'location', arr: true, sqlColumn: 'nama_lokasi_pendaratan'}
     ]);
 
-    const command = `rscript ${rscript(PRODUKSI_IKAN_PER_SUMBER_DAYA)} ${graphicImageName} ${restArgs}`;
-    const {stderr} = await executeCommandLine(resolveRscriptCommand(command));
-    //
-    if (stderr) {
-        res.status(500).json({
-            status: responseStatus(0),
-            error: stderr
-        });
-        return;
-    }
+    const command = `Rscript ${rscript(PRODUKSI_IKAN_PER_SUMBER_DAYA)} ${graphicImageName} ${restArgs}`;
+    const child = exec(resolveRscriptCommand(command), (err, stdout, stderr) => {
+        if (err !== null) {
+            console.log(err);
+            res.status(500).json({ status: responseStatus(0) });
+            return;
+        }
 
-    addGeneratedImage(requestKey, `${graphicImageName}${__image_extention}`);
-    res.status(200).json({
-        status: responseStatus(1),
-        graphicImageName: `${graphicImageName}${__image_extention}`
+        addGeneratedImage(requestKey, `${graphicImageName}${__image_extention}`);
+        res.status(200).json({
+            status: responseStatus(1),
+            graphicImageName: `${graphicImageName}${__image_extention}`
+        });
     });
+    console.log(child.pid);
+    addPid(requestKey, child.pid);
 });
 
 /**

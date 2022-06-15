@@ -10,8 +10,9 @@ const {
     rscript, normalizeEscapeString, concatenateAsSqlBetween, concatenateAsSqlOr, predefineResponse, selectSqlColumn
 } = require("../../helpers/utilities");
 const {pool} = require("../../database/database");
-const {addGeneratedImage} = require("../authorization");
+const {addGeneratedImage, addPid} = require("../authorization");
 const router = express.Router();
+const {exec} = require("child_process");
 
 /**
  * Route to generate report result for CPUE Graphic
@@ -28,22 +29,23 @@ router.post('/', async (req, res) => {
         {prop: 'location', arr: true, sqlColumn: 'nama_lokasi_pendaratan'}
     ]);
 
-    const command = `rscript ${rscript(CPUE)} ${graphicImageName} ${restArgs}`;
-    const {stderr} = await executeCommandLine(resolveRscriptCommand(command));
-    //
-    if (stderr) {
-        res.status(500).json({
-            status: responseStatus(0),
-            error: stderr
-        });
-        return;
-    }
+    const command = `Rscript ${rscript(CPUE)} ${graphicImageName} ${restArgs}`;
 
-    addGeneratedImage(requestKey, `${graphicImageName}${__image_extention}`);
-    res.status(200).json({
-        status: responseStatus(1),
-        graphicImageName: `${graphicImageName}${__image_extention}`
+    const child = exec(resolveRscriptCommand(command), (err, stdout, stderr) => {
+        if (err !== null) {
+            console.log(err);
+            res.status(500).json({ status: responseStatus(0) });
+            return;
+        }
+
+        addGeneratedImage(requestKey, `${graphicImageName}${__image_extention}`);
+        res.status(200).json({
+            status: responseStatus(1),
+            graphicImageName: `${graphicImageName}${__image_extention}`
+        });
     });
+    console.log(child.pid);
+    addPid(requestKey, child.pid);
 });
 
 
