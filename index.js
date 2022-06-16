@@ -18,6 +18,7 @@ const strukturUkuranIkanTertangkap = require('./routes/reports/struktur-ukuran-i
 const helpers = require('./routes/helper');
 const {authMiddleware, initializingCLS} = require('./routes/authorization');
 const {responseStatus, resolvePath} = require("./helpers/utilities");
+const runMigrate = require('./database/migrate');
 
 global.__project_root = __dirname;
 global.__image_extention = '.jpg';
@@ -72,15 +73,17 @@ app.use(function (req, res, next) {
 });
 
 
+runMigrate(() => {
+    /**
+     * Start the application
+     */
+    app.listen({
+        port: APP_PORT,
+        cors: '*'
+    }, () => {
+        initializingCLS();
+        console.log(`BRPL RED Handler app listening on port ${APP_PORT} use ${process.env.RED_DATABASE}`);
+        // console.log(`BRPL RED Handler app listening on port 4000`);
+    });
+})
 
-/**
- * Start the application
- */
-app.listen({
-    port: APP_PORT,
-    cors: '*'
-}, () => {
-    initializingCLS();
-    console.log(`BRPL RED Handler app listening on port ${APP_PORT} use ${process.env.RED_DATABASE}`);
-    // console.log(`BRPL RED Handler app listening on port 4000`);
-});

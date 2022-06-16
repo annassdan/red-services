@@ -62,7 +62,7 @@ router.post('/wpp', async (req, res, next) => {
                    group by wpp
                    order by wpp`;
 
-    pool.query(query, (error, {rows}) => {
+    pool.query(query, (error, rows) => {
         if (error) {
             res.status(500).json('Gagal');
             return;
@@ -84,7 +84,7 @@ router.post('/resources', async (req, res, next) => {
     group by sumber_daya
     order by sumber_daya`;
 
-    pool.query(query, (error, {rows}) => {
+    pool.query(query, (error, rows) => {
         if (error) {
             res.status(500).json('Gagal');
             return;
@@ -110,7 +110,7 @@ router.post('/locations', async (req, res, next) => {
     group by nama_lokasi_pendaratan
     order by nama_lokasi_pendaratan`
 
-    pool.query(query, (error, {rows}) => {
+    pool.query(query, (error, rows) => {
         if (error) {
             res.status(500).json('Gagal');
             return;

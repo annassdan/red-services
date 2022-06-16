@@ -214,16 +214,19 @@ function concatenateAsSql(columnTarget, value, andPrefix = false) {
 /**
  * Predefine structure response for vueform multiselect
  * @param res
- * @param rows
+ * @param data
  * @param allHeader
  */
-function predefineResponse(res, rows, allHeader) {
-    const responseBody = rows.length > 0 ? [
-        {
-            label: `${allHeader}&nbsp;&nbsp;(${rows.length})`,
-            options: rows
-        }
-    ] : (rows || []);
+function predefineResponse(res, data, allHeader) {
+    let responseBody = []
+    if (data) {
+        responseBody = data.rows.length > 0 ? [
+            {
+                label: `${allHeader}&nbsp;&nbsp;(${data.rows.length})`,
+                options: data.rows
+            }
+        ] : (data.rows || []);
+    }
 
     res.status(200).json(responseBody);
 }
