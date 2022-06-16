@@ -1,6 +1,7 @@
 const {REPORT_URLS, AUTHORIZATION_URL} = require("../helpers/constants");
-const {generateGraphicImageName, responseStatus, removeImage, resolveImagePath} = require("../helpers/utilities");
+const {generateGraphicImageName, responseStatus, removeImage, resolveImagePath, normalizeEscapeString} = require("../helpers/utilities");
 const kill = require('tree-kill');
+const {pool} = require("../database/database");
 
 /**
  * Create simple continuation storage
@@ -89,14 +90,29 @@ function assignNewUser(email, tempKey) {
     return {requestKey, me};
 }
 
+const check = async (email) => {
+    const data = await pool.query(`select active from red_access where email = '${normalizeEscapeString(email)}'`);
+    if (data) {
+        const { rows } = data;
+        if (rows.length > 0 && rows[0]['active'] === true) {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
 /**
  * Validate email to registered user emails
  * @param email
  * @param tempKey
  * @returns {{}|{requestKey: string, me: {requestKey: string, generatedImages: *[], tempKey, pids: *[], email}}}
  */
-function validateUser(email, tempKey) {
-    if (email === 'info@intelion.co.id') {
+const validateUser = async (email, tempKey) => {
+    const active = await check(email);
+    if (active) {
         return assignNewUser(email, tempKey);
     }
     
@@ -209,7 +225,7 @@ function guard() {
         if (req.originalUrl === AUTHORIZATION_URL) {
             const {email, tempKey} = req.body;
             // console.log(email, tempKey)
-            const {requestKey} = validateUser(email, tempKey);
+            const {requestKey} = await validateUser(email, tempKey);
             if (requestKey) {
                 req.body = {...req.body, requestKey};
                 next();
@@ -223,7 +239,7 @@ function guard() {
             const graphicImageName = generateGraphicImageName(graphic);
             let {me, others} = getAuthorizedUsersSplitMe(requestKey, 'requestKey');
             if (!me) {
-                const {requestKey: key, me: itsMe} = validateUser(email, tempKey);
+                const {requestKey: key, me: itsMe} = await validateUser(email, tempKey);
                 me = itsMe;
                 requestKey = key;
             }
