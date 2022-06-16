@@ -1,5 +1,6 @@
 const createError = require('http-errors');
 const express = require('express');
+require('dotenv').config();
 const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -17,7 +18,6 @@ const strukturUkuranIkanTertangkap = require('./routes/reports/struktur-ukuran-i
 const helpers = require('./routes/helper');
 const {authMiddleware, initializingCLS} = require('./routes/authorization');
 const {responseStatus, resolvePath} = require("./helpers/utilities");
-const { AsyncLocalStorage } = require("async_hooks");
 
 global.__project_root = __dirname;
 global.__image_extention = '.jpg';
@@ -81,6 +81,6 @@ app.listen({
     cors: '*'
 }, () => {
     initializingCLS();
-    console.log(`BRPL RED Handler app listening on port ${APP_PORT}`);
+    console.log(`BRPL RED Handler app listening on port ${APP_PORT} use ${process.env.RED_DATABASE}`);
     // console.log(`BRPL RED Handler app listening on port 4000`);
 });
