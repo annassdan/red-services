@@ -41,13 +41,24 @@ function generateGraphicImageName(graphicName) {
     return `${graphicName}_${times.toFixed(0)}_${String(Math.random()).replace('.', '')}`;
 }
 
+function setupDbConnectionArgs(setup) {
+    const conf = {
+        db: process.env.RED_DB,
+        host: process.env.RED_DB_HOST,
+        port: process.env.RED_DB_PORT,
+        user: process.env.RED_DB_USERNAME,
+        password: process.env.RED_DB_PASSWORD
+    };
+    return `${setup} ${asStringArg(conf.db)} ${asStringArg(conf.host)} ${asStringArg(conf.port)} ${asStringArg(conf.user)} ${asStringArg(conf.password)}`;
+}
+
 /**
  * Concatenate request params as string, used for R Script file arguments
  * @param body
  * @param params
  */
 function concatenateRscriptArguments(body, params) {
-    return params.reduce((accumulator, currentValue) => {
+    const setup = params.reduce((accumulator, currentValue) => {
         const defaultObject = { sqlColumn: undefined, first: false, ...currentValue };
         const {prop, props, str, arr, between, sqlColumn, first} = defaultObject;
 
@@ -76,6 +87,9 @@ function concatenateRscriptArguments(body, params) {
             }
         }
     }, '');
+
+
+    return setupDbConnectionArgs(setup);
 }
 
 /**

@@ -25,17 +25,6 @@ options(echo = TRUE)
 
 param <- commandArgs(trailingOnly=TRUE)
 
-#koneksi ke DB
-con <- DBI::dbConnect(
-  drv = RPostgres::Postgres(),
-  dbname = "e_brpl_2",
-  host = "localhost",
-  port = "5432",
-  user = "postgres",
-  password = "talasbogor"
-)
-on.exit(dbDisconnect(drv))
-
 file_name <- param[1]
 sampling_date_query <- param[2]
 wpp_query <- param[3]
@@ -44,6 +33,22 @@ location_query <- param[5]
 species_query <- param[6]
 length_query <- param[7]
 weight_query <- param[8]
+db_name <- param[9]
+db_host <- param[10]
+db_port <- param[11]
+db_user <- param[12]
+db_password <- param[13]
+
+#koneksi ke DB
+con <- DBI::dbConnect(
+  drv = RPostgres::Postgres(),
+  dbname = db_name,
+  host = db_host,
+  port = db_port,
+  user = db_user,
+  password = db_password
+)
+on.exit(dbDisconnect(drv))
 
 # Building query selector
 sql_query <- paste("
