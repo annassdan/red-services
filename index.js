@@ -6,7 +6,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const {
     APP_PORT, PUBLIC_PATH, CPUE, HUBUNGAN_PANJANG_BERAT, HASIL_TANGKAPAN_PER_TRIP, PRODUKSI_IKAN_PER_ALAT_TANGKAP,
-    PRODUKSI_IKAN_PER_SUMBER_DAYA, STRUKTUR_UKURAN_IKAN_TERTANGKAP, LPUE, AUTHORIZATION_URL
+    PRODUKSI_IKAN_PER_SUMBER_DAYA, STRUKTUR_UKURAN_IKAN_TERTANGKAP, LPUE, AUTHORIZATION_URL,
+    HS_PERBANDINGAN_PANJANG_BERAT
 } = require('./helpers/constants');
 const hubunganPanjangBerat = require('./routes/reports/hubungan-panjang-berat');
 const cpue = require('./routes/reports/cpue');
@@ -15,6 +16,7 @@ const hasilTangkapanPerTrip = require('./routes/reports/hasil-tangkapan-per-trip
 const produksiIkanPerAlatTangkap = require('./routes/reports/produksi-ikan-per-alat-tangkap');
 const produksiIkanPerSumberDaya = require('./routes/reports/produksi-ikan-per-sumber-daya');
 const strukturUkuranIkanTertangkap = require('./routes/reports/struktur-ukuran-ikan-tertangkap');
+const hsHubunganPanjangBerat = require('./routes/reports/hs-hubungan-panjang-berat');
 const helpers = require('./routes/helper');
 const {authMiddleware, initializingCLS} = require('./routes/authorization');
 const {responseStatus, resolvePath} = require("./helpers/utilities");
@@ -63,6 +65,7 @@ app.use(`/${PRODUKSI_IKAN_PER_ALAT_TANGKAP}`, produksiIkanPerAlatTangkap);
 app.use(`/${PRODUKSI_IKAN_PER_SUMBER_DAYA}`, produksiIkanPerSumberDaya);
 app.use(`/${STRUKTUR_UKURAN_IKAN_TERTANGKAP}`, strukturUkuranIkanTertangkap);
 app.use(`/${STRUKTUR_UKURAN_IKAN_TERTANGKAP}`, strukturUkuranIkanTertangkap);
+app.use(`/${HS_PERBANDINGAN_PANJANG_BERAT}`, hsHubunganPanjangBerat);
 app.use(`/helpers`, helpers);
 
 /**
